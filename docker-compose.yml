@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  universe:
+    image: 'universe'
+    container_name: 'universe'
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+    ports:
+      - "12345:12345"
+        #volumes:
+        #- /home/jon/.mujoco:/root/.mujoco
+    labels:
+      - traefik.backend=universe
+      - traefik.docker.network=proxy
+      - traefik.enable=true
+      - traefik.frontend.rule=Host:universe.stizz.net
+      - traefik.ssl.port=12345
+      - traefik.ssl.protocol=https
+      - traefik.frontend.entryPoints=https,http 
+      - traefik.http.port=12346
+      - traefik.http.protocol=http
+    tty: true
+    networks:
+      swarmProxy:
+
+networks:
+  swarmProxy:
+    external: True

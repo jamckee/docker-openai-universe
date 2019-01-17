@@ -1,5 +1,8 @@
 FROM ubuntu:16.04
 
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
+
 RUN apt-get update \
     && apt-get install -y libav-tools \
     python3-numpy \
@@ -29,9 +32,6 @@ RUN ln -sf /usr/bin/pip3 /usr/local/bin/pip \
     && ln -sf /usr/bin/python3 /usr/local/bin/python \
     && pip install -U pip
 
-# Install gym
-RUN pip install gym[all]
-
 # Get the faster VNC driver
 RUN pip install go-vncdriver>=0.4.0
 
@@ -47,10 +47,31 @@ WORKDIR /usr/local/universe/
 COPY ./setup.py ./
 COPY ./tox.ini ./
 
-RUN pip install -e .
-
 # Upload our actual code
 COPY . ./
+COPY /home/jon/.mujoco /root/.mujoco
+
+# Installed gym without MoJoCo
+# RUN pip install gym
+# RUN pip install gym[box2d]
+
+# Next section will only work if MuJoCo was installed on the host/building machine
+# LIBRARY_PATH /root/.mujoco/mjpro150/bin:${LD_LIBRARY_PATH}
+# Install gym
+RUN pip install gym[all]
+
+# Run installer
+RUN pip install -e .
 
 # Just in case any python cache files were carried over from the source directory, remove them
 RUN py3clean .
+
+# Additional cleanup
+RUN rm -rf \
+/tmp/* \
+/var/lib/apt/lists/* \
+/var/tmp/*
+
+EXPOSE 12345
+
+VOLUME /root

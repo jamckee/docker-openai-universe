@@ -14,7 +14,7 @@ setup(name='universe',
           'docker-pycreds==0.2.1',
           'fastzbarlight>=0.0.13',
           'go-vncdriver>=0.4.8',
-          'gym>=0.8.1',
+          #'gym>=0.8.1',
           'Pillow>=3.3.0',
           'PyYAML>=3.12',
           'six>=1.10.0',
@@ -24,6 +24,6 @@ setup(name='universe',
       package_data={'universe': ['runtimes.yml', 'runtimes/flashgames.json']},
       tests_require=['pytest'],
       extras_require={
-          'atari': 'gym[atari]',
+              #'atari': 'gym[atari]',
       }
       )
