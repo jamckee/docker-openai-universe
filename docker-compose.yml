@@ -11,8 +11,8 @@ services:
         max-size: "10m"
     ports:
       - "12345:12345"
-        #volumes:
-        #- /home/jon/.mujoco:/root/.mujoco
+    volumes:
+      - /home/jon/.mujoco:/root/.mujoco
     labels:
       - traefik.backend=universe
       - traefik.docker.network=proxy
