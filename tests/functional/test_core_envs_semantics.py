@@ -72,8 +72,8 @@ def rollout(matcher, env, vnc_env, timestep_limit=None, stage=None):
 
 # TODO: we should have auto-env spinup
 specs = [
-    (gym.spec('gym-core.PongDeterministicSync-v3'), AtariMatcher(), atari_vnc_wrapper),
-    (gym.spec('gym-core.PitfallDeterministicSync-v3'), AtariMatcher(), atari_vnc_wrapper),
+    (gym.spec('gym-core.PongDeterministicSync-v4'), AtariMatcher(), atari_vnc_wrapper),
+    (gym.spec('gym-core.PitfallDeterministicSync-v4'), AtariMatcher(), atari_vnc_wrapper),
 
     # This test is still broken. Looks like we're not piping the seed
     # to the CartPole env behind VNC

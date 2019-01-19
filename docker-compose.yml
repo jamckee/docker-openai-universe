@@ -5,14 +5,20 @@ services:
     image: 'universe'
     container_name: 'universe'
     restart: always
+    environment:
+      - DOCKER_NET_HOST=172.12.0.1
+      - DGROUP=997
     logging:
       driver: json-file
       options:
         max-size: "10m"
     ports:
       - "12345:12345"
+      - "5900:5900"
+      - "5901:5901"
     volumes:
-      - /home/jon/.mujoco:/root/.mujoco
+      - /home/jon/.mujoco:/home/universe/.mujoco
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - traefik.backend=universe
       - traefik.docker.network=proxy
@@ -24,6 +30,8 @@ services:
       - traefik.http.port=12346
       - traefik.http.protocol=http
     tty: true
+    cap_add: 
+      - NET_ADMIN
     networks:
       swarmProxy:
 

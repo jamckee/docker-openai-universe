@@ -1,85 +1,119 @@
 FROM ubuntu:16.04
-
-
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/.mujoco/mjpro150/bin
-
 ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update \
-    && apt-get install -y libav-tools \
-    python3-numpy \
-    python3-scipy \
+    && apt-get install -y \
     python3-setuptools \
-    python3-pip \
-    python3-dev \  
-    libpq-dev \
-    libjpeg-dev \
-    curl \
-    cmake \
-    swig \
     python3-opengl \
-    libboost-all-dev \
+    #42.5MB
+    libpq-dev \
+    #20.4MB
+    libjpeg-dev \
+    libav-tools \
     libsdl2-dev \
-    wget \
-    unzip \
-    git \
+    libvncserver-dev \
+    libosmesa6-dev \
+    cmake \
     golang \
+    git \
+    #148MB
+    libboost-all-dev \
+    #libboost-dev \
+    #32.3MB
+    && apt-get install -y --no-install-recommends \
+    python3-dev \
+    python3-pip \
+    #software-properties-common \
+    vim \
+    #30.5MB
+    && apt-get install -y --no-install-recommends \
+    wget \ 
+    curl \
+    patchelf \
     net-tools \
     iptables \
-    libvncserver-dev \
-    software-properties-common \
-    patchelf \
-    libosmesa6-dev
- 
-RUN apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    unzip \
+    swig \
+    sudo \
+# Install docker CE (Taken from get-docker.sh script)
+    apt-transport-https \
+    ca-certificates \
+    && curl -fsSL "https://download.docker.com/linux/ubuntu/gpg" | apt-key add \
+    && echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial edge" > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends docker-ce \
+# Clear the apt-cache we don't need anymore
+    && apt-get clean \ 
+    && rm -rf /var/lib/apt/lists/* \
+    /tmp/* \
+    /var/tmp/*
 
+# Create pip symlinks and update pip
 RUN ln -sf /usr/bin/pip3 /usr/local/bin/pip \
     && ln -sf /usr/bin/python3 /usr/local/bin/python \
     && pip install -U pip
 
+# Install VNC Dependency
+RUN pip install --no-cache-dir numpy \
+    && pip install --no-cache-dir go-vncdriver>=0.40 \
+# Base gym/gym[all] dependencies
+    && pip install --no-cache-dir setuptools pyglet requests scipy six certifi chardet idna urllib3 \
+# Next section will only work if MuJoCo was installed on the host/building machine and copied into image
+# RUN pip install gym[all]
+# Install gym without MuJoCo
+    && pip install --no-cache-dir gym==0.9.5 \
 # Get the faster VNC driver
-RUN pip install go-vncdriver>=0.4.0
-
+    && pip install --no-cache-dir go-vncdriver>=0.4.0 \
+# Pytest Dependecnies
+    && pip install --no-cache-dir atomicwrites attrs more-itertools pluggy py funcsigs pathlib2 scandir \
 # Install pytest (for running test cases)
-RUN pip install pytest
+    && pip install --no-cache-dir pytest \
+# Install MuJoCo dependencies but not MuJoCo
+    && pip install --no-cache-dir Cython cffi glfw imageio lockfile pycparser enum34 futures pillow \
+# Install remaining gym[all] dependencies
+    && pip install --no-cache-dir PyOpenGL atari-py box2d-py
+
+# Needs to run after MuJoCo is installed
+# Run installer
+# RUN pip install -e .
+
+# Get extra dependencies ahead of setup
+RUN pip install autobahn>=0.16.0 \
+    docker-py==1.10.3 \
+    docker-pycreds==0.2.1 \
+    fastzbarlight>=0.0.13 \ 
+    PyYAML>=3.12 \
+    twisted>=16.5.0 \
+    ujson>=1.35 \
+    h5py \
+    keras-applications \
+    pachi-py \
+    Box2D-kengz \
+    keras \
+    Theano 
+
+# Switch back to teletype
+ENV DEBIAN_FRONTEND teletype
 
 # Force the container to use the go vnc driver
 ENV UNIVERSE_VNCDRIVER='go'
 
-WORKDIR /usr/local/universe/
-
-# Cachebusting
-COPY ./setup.py ./
-COPY ./tox.ini ./
-
-# Upload our actual code
-COPY . ./
-
-# Next section will only work if MuJoCo was installed on the host/building machine and copied into image
-# RUN pip install gym[all]
-
-# Run installer
-#RUN pip install -e .
-
-# Get extra dependencies ahead of setup
-RUN pip install imageio \
-&& pip install atari-py \
-&& pip install glfw \
-&& pip install Cython \
-&& pip install pycparser \
-&& pip install cffi \
-&& pip install lockfile
-
 # Just in case any python cache files were carried over from the source directory, remove them
 RUN py3clean .
 
-# Additional cleanup
-RUN rm -rf \
-/tmp/* \
-/var/lib/apt/lists/* \
-/var/tmp/*
+# Create universe user
+RUN useradd --create-home --shell /bin/bash universe \
+    && usermod -aG sudo universe \
+    && usermod -aG docker universe \
+    && echo "universe ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    && echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/universe/.mujoco/mjpro150/bin" >> /home/universe/.bashrc
+USER universe
 
-ENV DEBIAN_FRONTEND teletype
+#set our working directory
+WORKDIR /home/universe/
 
-EXPOSE 12345
+# Cachebusting - upload our actual code
+COPY . ./
+ENV DGROUP=999
+#Run our entry script
 ENTRYPOINT ["sh","./entry.sh"]

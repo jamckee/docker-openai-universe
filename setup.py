@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+#'gym[all]==0.9.5',
 setup(name='universe',
       version='0.21.5',
       description="Universe: a software platform for measuring and training an AI's general intelligence across the world's supply of games, websites and other applications.",
@@ -14,7 +15,7 @@ setup(name='universe',
           'docker-pycreds==0.2.1',
           'fastzbarlight>=0.0.13',
           'go-vncdriver>=0.4.8',
-          #'gym>=0.8.1',
+          'gym[all]',
           'Pillow>=3.3.0',
           'PyYAML>=3.12',
           'six>=1.10.0',
@@ -24,6 +25,6 @@ setup(name='universe',
       package_data={'universe': ['runtimes.yml', 'runtimes/flashgames.json']},
       tests_require=['pytest'],
       extras_require={
-              #'atari': 'gym[atari]',
+              'atari': 'gym[atari]',
       }
       )
